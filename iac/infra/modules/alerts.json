@@ -1,0 +1,382 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.41.2.15936",
+      "templateHash": "15085452895010875547"
+    }
+  },
+  "parameters": {
+    "environment": {
+      "type": "string",
+      "metadata": {
+        "description": "Environment name (dev, staging, prod)."
+      }
+    },
+    "workload": {
+      "type": "string",
+      "metadata": {
+        "description": "Workload name used in resource naming."
+      }
+    },
+    "tags": {
+      "type": "object",
+      "metadata": {
+        "description": "Tags to apply to all resources."
+      }
+    },
+    "logAnalyticsWorkspaceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the Log Analytics Workspace."
+      }
+    },
+    "appServiceResourceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the App Service."
+      }
+    },
+    "appServiceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the App Service."
+      }
+    },
+    "sqlDatabaseResourceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource ID of the SQL Database."
+      }
+    },
+    "sqlServerName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the SQL Server."
+      }
+    },
+    "sqlDatabaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the SQL Database."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[format('alert-cpu-high-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "description": "Alert when App Service CPU exceeds 80%",
+        "severity": 2,
+        "enabled": true,
+        "scopes": [
+          "[parameters('appServiceResourceId')]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "HighCPU",
+              "metricName": "CpuPercentage",
+              "operator": "GreaterThan",
+              "threshold": 80,
+              "timeAggregation": "Average",
+              "criterionType": "StaticThresholdCriterion"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[format('alert-http5xx-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "description": "Alert when HTTP 5xx errors exceed 5 in 5 minutes",
+        "severity": 1,
+        "enabled": true,
+        "scopes": [
+          "[parameters('appServiceResourceId')]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "Http5xxErrors",
+              "metricName": "Http5xx",
+              "operator": "GreaterThan",
+              "threshold": 5,
+              "timeAggregation": "Total",
+              "criterionType": "StaticThresholdCriterion"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[format('alert-response-time-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "description": "Alert when response time exceeds 2 seconds",
+        "severity": 2,
+        "enabled": true,
+        "scopes": [
+          "[parameters('appServiceResourceId')]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "HighResponseTime",
+              "metricName": "HttpResponseTime",
+              "operator": "GreaterThan",
+              "threshold": 2,
+              "timeAggregation": "Average",
+              "criterionType": "StaticThresholdCriterion"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[format('alert-health-check-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "description": "Alert when health check status drops below 100%",
+        "severity": 1,
+        "enabled": true,
+        "scopes": [
+          "[parameters('appServiceResourceId')]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "HealthCheckFailure",
+              "metricName": "HealthCheckStatus",
+              "operator": "LessThan",
+              "threshold": 100,
+              "timeAggregation": "Average",
+              "criterionType": "StaticThresholdCriterion"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[format('alert-dtu-high-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "description": "Alert when SQL Database DTU exceeds 80%",
+        "severity": 2,
+        "enabled": true,
+        "scopes": [
+          "[parameters('sqlDatabaseResourceId')]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "HighDTU",
+              "metricName": "dtu_consumption_percent",
+              "operator": "GreaterThan",
+              "threshold": 80,
+              "timeAggregation": "Average",
+              "criterionType": "StaticThresholdCriterion"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[format('alert-failed-connections-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "description": "Alert when failed connections exceed 10 in 5 minutes",
+        "severity": 1,
+        "enabled": true,
+        "scopes": [
+          "[parameters('sqlDatabaseResourceId')]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "FailedConnections",
+              "metricName": "connection_failed",
+              "operator": "GreaterThan",
+              "threshold": 10,
+              "timeAggregation": "Total",
+              "criterionType": "StaticThresholdCriterion"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[format('alert-deadlocks-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "description": "Alert on any deadlocks",
+        "severity": 2,
+        "enabled": true,
+        "scopes": [
+          "[parameters('sqlDatabaseResourceId')]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "Deadlocks",
+              "metricName": "deadlock",
+              "operator": "GreaterThan",
+              "threshold": 0,
+              "timeAggregation": "Total",
+              "criterionType": "StaticThresholdCriterion"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/metricAlerts",
+      "apiVersion": "2018-03-01",
+      "name": "[format('alert-storage-high-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "location": "global",
+      "tags": "[parameters('tags')]",
+      "properties": {
+        "description": "Alert when SQL Database storage exceeds 80%",
+        "severity": 3,
+        "enabled": true,
+        "scopes": [
+          "[parameters('sqlDatabaseResourceId')]"
+        ],
+        "evaluationFrequency": "PT1M",
+        "windowSize": "PT5M",
+        "criteria": {
+          "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria",
+          "allOf": [
+            {
+              "name": "HighStorage",
+              "metricName": "storage_percent",
+              "operator": "GreaterThan",
+              "threshold": 80,
+              "timeAggregation": "Maximum",
+              "criterionType": "StaticThresholdCriterion"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[resourceId('Microsoft.Web/sites', parameters('appServiceName'))]",
+      "name": "[format('diag-appservice-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "properties": {
+        "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+        "logs": [
+          {
+            "category": "AppServiceHTTPLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServiceConsoleLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServiceAppLogs",
+            "enabled": true
+          },
+          {
+            "category": "AppServicePlatformLogs",
+            "enabled": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[resourceId('Microsoft.Sql/servers', parameters('sqlServerName'))]",
+      "name": "[format('diag-sqlserver-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "properties": {
+        "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+        "logs": [
+          {
+            "category": "SQLSecurityAuditEvents",
+            "enabled": true
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Insights/diagnosticSettings",
+      "apiVersion": "2021-05-01-preview",
+      "scope": "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('sqlDatabaseName'))]",
+      "name": "[format('diag-sqldb-{0}-{1}', parameters('workload'), parameters('environment'))]",
+      "properties": {
+        "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+        "logs": [
+          {
+            "category": "SQLInsights",
+            "enabled": true
+          },
+          {
+            "category": "AutomaticTuning",
+            "enabled": true
+          },
+          {
+            "category": "QueryStoreRuntimeStatistics",
+            "enabled": true
+          },
+          {
+            "category": "Errors",
+            "enabled": true
+          },
+          {
+            "category": "Timeouts",
+            "enabled": true
+          }
+        ]
+      }
+    }
+  ]
+}
