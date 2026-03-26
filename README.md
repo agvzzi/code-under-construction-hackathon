@@ -65,7 +65,7 @@ az account show --query "{name:name, id:id, tenantId:tenantId}" -o table
 ### 1. Clone and Open
 
 ```bash
-git clone https://github.com/bram-boer/code-under-construction-hackathon.git
+git clone https://github.com/pascalvanderheiden/code-under-construction-hackathon.git
 cd code-under-construction-hackathon
 ```
 
